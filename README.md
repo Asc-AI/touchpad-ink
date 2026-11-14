@@ -18,6 +18,15 @@ Touchpad Ink 是一个常驻托盘的小工具。它读取 Windows Precision Tou
 
 ![候选条](docs/candidates.png)
 
+## 下载
+
+不想装 Python 的话，直接到 [Releases](https://github.com/Asc-AI/touchpad-ink/releases/latest) 下载：
+
+- `TouchpadInk-windows-x64.zip`：解压后运行 `TouchpadInk.exe`（推荐，启动快）
+- `TouchpadInk-manual-zh.pdf`：面向普通用户的中文使用说明
+
+程序未签名，首次运行如遇 SmartScreen，选择“更多信息 → 仍要运行”。
+
 ## 功能
 
 | 模式 | 用法 | 适合 |
