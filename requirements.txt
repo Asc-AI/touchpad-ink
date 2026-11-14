@@ -1,0 +1,6 @@
+hidapi>=0.15
+winrt-runtime>=4.0
+winrt-Windows.Foundation>=4.0
+winrt-Windows.Foundation.Collections>=4.0
+winrt-Windows.Storage.Streams>=4.0
+winrt-Windows.UI.Input.Inking>=4.0
