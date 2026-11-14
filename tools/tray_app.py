@@ -27,6 +27,7 @@ import tkinter as tk
 import traceback
 
 from auto_mode import AutoSelector, auto_log, foreground_kind
+import autostart
 import pad_info
 from draw_window import DrawWindow
 from gesture import DoublePress, TapDetector
@@ -89,7 +90,8 @@ class Host:
         root.title('触控板手写')
         root.report_callback_exception = self.report_exception
         if self.tray is None and not safe_preview:
-            self.tray = TrayIcon(self.commands)
+            self.tray = TrayIcon(self.commands,
+                                 startup_check=autostart.enabled)
         if self.tray is not None:
             self.tray.start()
         self.switch('auto')
@@ -305,10 +307,25 @@ class Host:
         kind = command[0] if command else ''
         if kind == 'mode' and len(command) > 1:
             self.switch(command[1])
+        elif kind == 'startup':
+            self.toggle_startup()
         elif kind == 'clear':
             self.clear()
         elif kind == 'quit':
             self.quit()
+
+    def toggle_startup(self):
+        """Turn "start at sign-in" on or off; log the outcome for diagnosis."""
+        state = autostart.toggle()
+        if state is None:
+            message = 'startup: could not update the Run key'
+        else:
+            message = 'startup -> %s' % ('on' if state else 'off')
+        if self.log is not None:
+            self.log(message)
+        else:
+            print(message, file=sys.stderr)
+        return state
 
     def report_exception(self, exc_type, exc, tb):
         view = self.view
@@ -390,6 +407,8 @@ def main():
         print('Another touchpad tray is already running: press Ctrl+F8 in the '
               'old one, then start this build again.', flush=True)
         return 1
+    if autostart.refresh():
+        auto_log('startup: repointed to this build')
     root = tk.Tk()
     host = Host(root)
     host.log = auto_log

@@ -66,6 +66,7 @@ MENU_QUIT = 4
 MENU_PPT = 5
 MENU_NOTE = 6
 MENU_AUTO = 7
+MENU_STARTUP = 8
 
 
 class GUID(C.Structure):
@@ -247,10 +248,12 @@ def build_icon(path):
 
 # ---------------------------------------------------------------- tray icon
 class TrayIcon(threading.Thread):
-    def __init__(self, commands, icon_path=None, title='触控板手写'):
+    def __init__(self, commands, icon_path=None, title='触控板手写',
+                 startup_check=None):
         super().__init__(name='touchpad tray icon', daemon=True)
         self.commands = commands
         self.title = title
+        self.startup_check = startup_check
         self.icon_path = Path(icon_path) if icon_path else (
             app_paths.data_dir() / 'tray.ico')
         self.mode = 'auto'
@@ -295,6 +298,14 @@ class TrayIcon(threading.Thread):
         return (rect.left, rect.top, rect.right - rect.left,
                 rect.bottom - rect.top)
 
+    def startup_enabled(self):
+        if self.startup_check is None:
+            return False
+        try:
+            return bool(self.startup_check())
+        except BaseException:
+            return False
+
     def handle_menu(self, command):
         """Map a TrackPopupMenu result to a host command (kept pure for tests)."""
         if command == MENU_AUTO:
@@ -307,6 +318,8 @@ class TrayIcon(threading.Thread):
             self.commands.put(('mode', 'ppt'))
         elif command == MENU_NOTE:
             self.commands.put(('mode', 'note'))
+        elif command == MENU_STARTUP:
+            self.commands.put(('startup',))
         elif command == MENU_CLEAR:
             self.commands.put(('clear',))
         elif command == MENU_QUIT:
@@ -389,6 +402,9 @@ class TrayIcon(threading.Thread):
         check = MF_CHECKED if self.mode == 'note' else 0
         U.AppendMenuW(menu, MF_STRING | check, MENU_NOTE,
                       'Note 墨迹（OneNote 左键笔画）')
+        U.AppendMenuW(menu, MF_SEPARATOR, 0, None)
+        check = MF_CHECKED if self.startup_enabled() else 0
+        U.AppendMenuW(menu, MF_STRING | check, MENU_STARTUP, '开机自启动')
         U.AppendMenuW(menu, MF_SEPARATOR, 0, None)
         flags = MF_STRING | (0 if self.mode == 'draw' else MF_GRAYED)
         U.AppendMenuW(menu, flags, MENU_CLEAR, '清除全屏笔迹')

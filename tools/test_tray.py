@@ -65,14 +65,23 @@ class MenuTests(unittest.TestCase):
         self.tray.handle_menu(T.MENU_DRAW)
         self.tray.handle_menu(T.MENU_PPT)
         self.tray.handle_menu(T.MENU_NOTE)
+        self.tray.handle_menu(T.MENU_STARTUP)
         self.tray.handle_menu(T.MENU_CLEAR)
         self.tray.handle_menu(T.MENU_QUIT)
         self.tray.handle_menu(999)
-        self.assertEqual([self.commands.get_nowait() for _ in range(7)],
+        self.assertEqual([self.commands.get_nowait() for _ in range(8)],
                          [('mode', 'auto'), ('mode', 'typing'),
                           ('mode', 'draw'), ('mode', 'ppt'),
-                          ('mode', 'note'), ('clear',), ('quit',)])
+                          ('mode', 'note'), ('startup',), ('clear',),
+                          ('quit',)])
         self.assertTrue(self.commands.empty())
+
+    def test_startup_item_reflects_the_checker(self):
+        self.assertFalse(self.tray.startup_enabled())
+        self.tray.startup_check = lambda: True
+        self.assertTrue(self.tray.startup_enabled())
+        self.tray.startup_check = lambda: 1 / 0
+        self.assertFalse(self.tray.startup_enabled())
 
     def test_set_mode_is_posted_to_the_icon_thread(self):
         self.tray.hwnd = 123
@@ -105,8 +114,8 @@ class MenuTests(unittest.TestCase):
 
     def test_mode_constants_are_distinct(self):
         ids = {T.MENU_AUTO, T.MENU_TYPING, T.MENU_DRAW, T.MENU_PPT,
-               T.MENU_NOTE, T.MENU_CLEAR, T.MENU_QUIT}
-        self.assertEqual(len(ids), 7)
+               T.MENU_NOTE, T.MENU_STARTUP, T.MENU_CLEAR, T.MENU_QUIT}
+        self.assertEqual(len(ids), 8)
 
     def test_every_mode_has_an_index_and_label(self):
         self.assertEqual(set(T.MODE_INDEX), set(T.MODE_ORDER))
@@ -254,6 +263,14 @@ class HostTests(unittest.TestCase):
         self.host.switch('typing')
         self.host.handle(('clear',))
         self.assertNotEqual(self.log[-1][0], 'clear')
+
+    def test_startup_command_toggles_autostart(self):
+        with patch.object(tray_app.autostart, 'toggle',
+                          return_value=True) as toggle:
+            self.host.handle(('startup',))
+        toggle.assert_called_once_with()
+        with patch.object(tray_app.autostart, 'toggle', return_value=None):
+            self.assertIsNone(self.host.toggle_startup())
 
     def test_quit_command_stops_view_and_tray(self):
         self.host.switch('typing')

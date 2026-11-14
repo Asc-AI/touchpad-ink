@@ -4,6 +4,10 @@ cd /d "%~dp0"
 title Touchpad Handwriting Tray
 echo Touchpad handwriting tray is running.
 echo   Tray icon    left or right click: auto / typing / full-screen / PPT / Note
+echo   Start at login: below the modes the menu has "start at sign-in"; it
+echo                writes HKCU Run for this user only (no admin, no task);
+echo                a check mark means enabled. Re-run a moved build once to
+echo                rewrite the stored path
 echo   Auto mode    one check per Alt hold: OneNote -^> Note ink, slide show
 echo                -^> PPT ink, text caret -^> caret overlay, otherwise nothing
 echo   Hold Alt     write. Typing: capture starts on Alt down, so the first
